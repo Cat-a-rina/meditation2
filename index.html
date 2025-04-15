@@ -1,0 +1,105 @@
+<script src="https://cdn.jsdelivr.net/gh/netizenorg/netnet-standard-library/build/nn.min.js"></script>
+<script>
+/* global nn */
+
+nn.on('load', () => {
+  const warmEmoji = ['🌞', '🔥', '🍊', '🧡', '🌻', '🍑'];
+  const coolEmoji = ['💙', '❄️', '🧊', '🔵', '🌀'];
+  const greenEmoji = ['🥬', '🍏', '🌿', '🐢', '🍀'];
+  const blackEmoji = ['🖤', '🏴', '🎩'];
+
+  const layers = [warmEmoji, coolEmoji, greenEmoji, blackEmoji];
+  const fontSize = 24; // adjust for emoji size
+  const cols = Math.ceil(nn.width / fontSize);
+  const rows = Math.ceil(nn.height / fontSize);
+
+  let layerIndex = 0;
+  let currentCol = 0;
+  let currentRow = 0;
+
+  // Function to draw the layers of emojis
+  function drawLayerGrid() {
+    for (let i = 0; i < 10; i++) { // emojis per frame
+      if (currentRow >= rows) {
+        layerIndex++;
+        currentRow = 0;
+        currentCol = 0;
+
+        if (layerIndex < layers.length) {
+          setTimeout(() => requestAnimationFrame(drawLayerGrid), 300);
+        }
+        return;
+      }
+
+      const emoji = nn.random(layers[layerIndex]);
+      const x = currentCol * fontSize;
+      const y = currentRow * fontSize;
+
+      nn.create('span')
+        .content(emoji)
+        .css({
+          position: 'absolute',
+          left: x,
+          top: y,
+          fontSize: `${fontSize}px`,
+          lineHeight: '1',
+          pointerEvents: 'none' // Avoid interfering with eraser
+        })
+        .addTo('body');
+
+      currentCol++;
+      if (currentCol >= cols) {
+        currentCol = 0;
+        currentRow++;
+      }
+    }
+
+    requestAnimationFrame(drawLayerGrid);
+  }
+
+  drawLayerGrid();
+
+  let isErasing = false; // State for eraser tool
+
+  // Function to erase topmost emoji continuously while dragging
+  function eraseTopmostEmoji() {
+    if (isErasing && nn.mouseDown) {
+      // Get all elements at the mouse position
+      const elements = document.elementsFromPoint(nn.mouseX, nn.mouseY);
+
+      // Loop through the elements and remove the topmost emoji found
+      elements.forEach(el => {
+        if (el.tagName === 'SPAN') {
+          // Remove the emoji
+          el.remove();
+
+          // We stop after removing the topmost element (we don't need to go further)
+          return;
+        }
+      });
+    }
+  }
+
+  // Activate eraser when user presses the "E" key
+  nn.on('keydown', (e) => {
+    if (e.key === 'e') {
+      isErasing = true;  // Activate eraser
+      nn.on('mousemove', eraseTopmostEmoji);  // Start erasing when moving the mouse
+    }
+  });
+
+  // Deactivate eraser when mouse is released
+  nn.on('mouseup', () => {
+    isErasing = false; // Deactivate eraser
+    nn.off('mousemove', eraseTopmostEmoji);  // Stop erasing
+  });
+
+  // Optionally, deactivate eraser when "E" key is pressed again
+  nn.on('keydown', (e) => {
+    if (e.key === 'e') {
+      isErasing = false;  // Deactivate eraser if "E" is pressed again
+      nn.off('mousemove', eraseTopmostEmoji);  // Stop erasing
+    }
+  });
+});
+</script>
