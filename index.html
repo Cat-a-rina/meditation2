@@ -35,17 +35,23 @@ nn.on('load', () => {
       const x = currentCol * fontSize;
       const y = currentRow * fontSize;
 
-      nn.create('span')
+      const rm = nn.create('span')
         .content(emoji)
         .css({
           position: 'absolute',
           left: x,
           top: y,
           fontSize: `${fontSize}px`,
-          lineHeight: '1',
-          pointerEvents: 'none' // Avoid interfering with eraser
+          lineHeight: '1',  
+          userSelect: 'none'
         })
-        .addTo('body');
+        .addTo('body')
+        .on('mouseover', ()  => {
+          if (nn.mouseDown) {
+            //timeout
+            rm.remove()
+          }
+        }, false)
 
       currentCol++;
       if (currentCol >= cols) {
@@ -79,27 +85,5 @@ nn.on('load', () => {
       });
     }
   }
-
-  // Activate eraser when user presses the "E" key
-  nn.on('keydown', (e) => {
-    if (e.key === 'e') {
-      isErasing = true;  // Activate eraser
-      nn.on('mousemove', eraseTopmostEmoji);  // Start erasing when moving the mouse
-    }
-  });
-
-  // Deactivate eraser when mouse is released
-  nn.on('mouseup', () => {
-    isErasing = false; // Deactivate eraser
-    nn.off('mousemove', eraseTopmostEmoji);  // Stop erasing
-  });
-
-  // Optionally, deactivate eraser when "E" key is pressed again
-  nn.on('keydown', (e) => {
-    if (e.key === 'e') {
-      isErasing = false;  // Deactivate eraser if "E" is pressed again
-      nn.off('mousemove', eraseTopmostEmoji);  // Stop erasing
-    }
-  });
 });
 </script>
